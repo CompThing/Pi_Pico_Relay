@@ -69,7 +69,7 @@ void relaySetOrClear(int pin_num, bool set_value) {
 
 int COMMAND_TABLE_LEN = 2;
 char * COMMAND_TABLE[] = {
-    "help"
+    "help",
     "relay"
 };
 
@@ -111,7 +111,9 @@ void commandsAll(int word_count, char* word_list[]) {
     int sub_count = word_count - 1;
     bool command_result = true;
     for (int command_num = 0; command_num < COMMAND_TABLE_LEN; command_num++) {
-        if (isEqual(command,COMMAND_TABLE[command_num])) {
+        printf("DEBUG %d, cmd: %s\n match: %s\n", command_num, command, COMMAND_TABLE[command_num]);
+        if (isEqual(command,COMMAND_TABLE[command_num]) == true) {
+            printf("EQUALS\n");
             switch (command_num)
             {
             case 0:
@@ -147,7 +149,6 @@ int lineIntoWords(int max_words, char* word_list[], int line_length, char* line)
                 in_word = false;
             }
             else {
-                printf("DEBUG word %d char %c remaining: %s", word_count, line[index], &line[index]);
                 continue;
             }
         }
@@ -161,7 +162,6 @@ int lineIntoWords(int max_words, char* word_list[], int line_length, char* line)
                 in_word = true;
                 word_list[word_count] = &line[index];
                 word_count++;
-                printf("DEBUGA word %d char %c remaining: %s", word_count, line[index], &line[index]);
                 if (word_count >= max_words) {
                     break;
                 }
