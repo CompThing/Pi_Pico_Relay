@@ -27,6 +27,12 @@ static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
             (uint32_t) (b);
 }
 
+int hex2int(char *s) {
+    int x;
+    sscanf(s, "%x", &x);
+    return x;
+}
+
 bool blink_callback(struct repeating_timer *t) {
     if (blink_led_on) {
         gpio_put(LED_PIN, 1);
@@ -67,11 +73,22 @@ void relaySetOrClear(int pin_num, bool set_value) {
 
 }
 
-int COMMAND_TABLE_LEN = 2;
+void relayValueMask(uint relay_value, uint relay_mask) {
+    for (int pin_num = 0; pin_num < 8; pin_num++) {
+        if (relay_mask & 1) {
+            uint pin_value = relay_value & 0x01;
+            relaySetOrClear(pin_num, pin_value);
+        }
+        relay_value = relay_value >> 1;
+        relay_mask = relay_mask >> 1;
+    }
+}
+
 char * COMMAND_TABLE[] = {
     "help",
     "relay"
 };
+int COMMAND_TABLE_LEN = sizeof(COMMAND_TABLE) / sizeof(COMMAND_TABLE[0]);
 
 char* HELP =
     "Commands:\n"
@@ -83,37 +100,78 @@ void commandHelp() {
     printf("%s", HELP);
 }
 
-int RELAY_COMMAND_TABLE_LEN = 2;
 char * RELAY_COMMAND_TABLE[] = {
     "set",
-    "clear"
+    "clear",
+    "value"
 };
+int RELAY_COMMAND_TABLE_LEN = sizeof(RELAY_COMMAND_TABLE) / sizeof(RELAY_COMMAND_TABLE[0]);
 
 bool commandRelays(int word_count, char* word_list[]) {
+    int command_table_len = RELAY_COMMAND_TABLE_LEN;
+    char ** command_table = RELAY_COMMAND_TABLE;
     char* command = word_list[0];
     char **sub_commands =  &word_list[1];
+    int relay_num;
     int sub_count = word_count - 1;
     if (sub_count < 1) {
         return false;
     }
     bool set_value = false;
-    if (isEqual(command, COMMAND_TABLE[0])) {
+    if (isEqual(command, command_table[0])) {
         set_value = true;
     }
-    int relay_num = sub_commands[0] - "0" - 1;
-    relaySetOrClear(relay_num, set_value);
-    return true;
+    for (int command_num = 0; command_num < command_table_len; command_num++) {
+        if (isEqual(command,command_table[command_num]) == true) {
+            switch (command_num)
+            {
+            case 0:
+                set_value = true;
+                relay_num = hex2int(sub_commands[0]) - 1;
+                relaySetOrClear(relay_num, set_value);
+                printf("RESULT relay set %d %d\n", relay_num, set_value);
+                return true;
+            
+            case 1:
+                set_value = false;
+                relay_num = hex2int(sub_commands[0]) - 1;
+                relaySetOrClear(relay_num, set_value);
+                printf("RESULT relay clear %d %d\n", relay_num, set_value);
+                return true;
+
+            case 2:
+                if (isEqual(sub_commands[1], "mask")) {
+                    int relay_value = hex2int(sub_commands[0]);
+                    int relay_mask = hex2int(sub_commands[2]);
+                    relayValueMask(relay_value, relay_mask);
+                    printf("RESULT relay value mask %x %x\n", relay_value, relay_mask);
+                    return true;
+                }
+                else {
+                    printf("ERROR relay mask %s\n", sub_commands[1]);
+                    return false;
+                }
+
+            default:
+                printf("ERROR relay %s %d\n", command, command_num);
+                commandHelp();
+                break;
+            }
+            break;
+        }
+    }
+    return false;
 }
 
 void commandsAll(int word_count, char* word_list[]) {
+    int command_table_len = COMMAND_TABLE_LEN;
+    char ** command_table = COMMAND_TABLE;
     char* command = word_list[0];
     char **sub_commands = &word_list[1];
     int sub_count = word_count - 1;
     bool command_result = true;
-    for (int command_num = 0; command_num < COMMAND_TABLE_LEN; command_num++) {
-        printf("DEBUG %d, cmd: %s\n match: %s\n", command_num, command, COMMAND_TABLE[command_num]);
-        if (isEqual(command,COMMAND_TABLE[command_num]) == true) {
-            printf("EQUALS\n");
+    for (int command_num = 0; command_num < command_table_len; command_num++) {
+        if (isEqual(command,command_table[command_num]) == true) {
             switch (command_num)
             {
             case 0:
@@ -144,7 +202,7 @@ int lineIntoWords(int max_words, char* word_list[], int line_length, char* line)
     bool in_word = false;
     for (int index = 0; index < line_length; index++) {
         if (in_word) {
-            if ((line[index] == ' ') || (line[index] == '\n')) {
+            if ((line[index] == ' ') || (line[index] == '\n')|| (line[index] == '\r')) {
                 line[index] = '\0';
                 in_word = false;
             }
@@ -214,11 +272,8 @@ int main() {
     while (1) {
         uint16_t data_len = readLine(line_buffer, MAX_LINE_LENGTH);
         if (data_len > 0) {
-            printf("%s END\n", line_buffer);
             strcpy(word_buffer, line_buffer);
             int word_count = lineIntoWords(MAX_WORDS, word_list, data_len, word_buffer);
-            printf("Word count: %d\n", word_count);
-            printf("COMMAND: %s\n", word_list[0]);
             commandsAll(word_count, word_list);
         }
     }

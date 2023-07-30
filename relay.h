@@ -1,5 +1,5 @@
 #define MAX_LINE_LENGTH 81
-#define MAX_WORDS 4
+#define MAX_WORDS 6
 
 #define JDQ1 21
 #define JDQ2 20
