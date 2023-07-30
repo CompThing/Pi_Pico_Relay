@@ -66,11 +66,10 @@ void relaySetOrClear(int pin_num, bool set_value) {
     else {
         relay_states &= ~(1UL << pin_num);
     }
-    uint red = (relay_states >> 6) * 64;
-    uint green = (relay_states & 0x3F >> 3) * 32;
-    uint blue = (relay_states & 0x07) * 32;
-    put_pixel(urgb_u32(red, green, blue));
-
+    // uint red = (relay_states >> 6) * 64;
+    // uint green = (relay_states & 0x3F >> 3) * 32;
+    // uint blue = (relay_states & 0x07) * 32;
+    // put_pixel(urgb_u32(red % 256, green % 256, blue % 256));
 }
 
 void relayValueMask(uint relay_value, uint relay_mask) {
@@ -103,8 +102,10 @@ void commandHelp() {
 char * RELAY_COMMAND_TABLE[] = {
     "set",
     "clear",
-    "value"
+    "value",
+    "state?"
 };
+
 int RELAY_COMMAND_TABLE_LEN = sizeof(RELAY_COMMAND_TABLE) / sizeof(RELAY_COMMAND_TABLE[0]);
 
 bool commandRelays(int word_count, char* word_list[]) {
@@ -114,9 +115,6 @@ bool commandRelays(int word_count, char* word_list[]) {
     char **sub_commands =  &word_list[1];
     int relay_num;
     int sub_count = word_count - 1;
-    if (sub_count < 1) {
-        return false;
-    }
     bool set_value = false;
     if (isEqual(command, command_table[0])) {
         set_value = true;
@@ -127,6 +125,9 @@ bool commandRelays(int word_count, char* word_list[]) {
             {
             case 0:
                 set_value = true;
+                if (sub_count < 1) {
+                    return false;
+                }
                 relay_num = hex2int(sub_commands[0]) - 1;
                 relaySetOrClear(relay_num, set_value);
                 printf("RESULT relay set %d %d\n", relay_num, set_value);
@@ -134,12 +135,18 @@ bool commandRelays(int word_count, char* word_list[]) {
             
             case 1:
                 set_value = false;
+                if (sub_count < 1) {
+                    return false;
+                }
                 relay_num = hex2int(sub_commands[0]) - 1;
                 relaySetOrClear(relay_num, set_value);
                 printf("RESULT relay clear %d %d\n", relay_num, set_value);
                 return true;
 
             case 2:
+                if (sub_count < 3) {
+                    return false;
+                }
                 if (isEqual(sub_commands[1], "mask")) {
                     int relay_value = hex2int(sub_commands[0]);
                     int relay_mask = hex2int(sub_commands[2]);
@@ -151,6 +158,10 @@ bool commandRelays(int word_count, char* word_list[]) {
                     printf("ERROR relay mask %s\n", sub_commands[1]);
                     return false;
                 }
+
+            case 3:
+                printf("RESULT relay state %x\n", relay_states);
+                return true;
 
             default:
                 printf("ERROR relay %s %d\n", command, command_num);
@@ -238,6 +249,13 @@ int readLine(char *buffer, int length)
     while (index < length) {
         int c = getchar_timeout_us(100);
         if (c == PICO_ERROR_TIMEOUT) {
+            continue;
+        }
+        if (c == '\b') {
+            if (index > 0) {
+                printf("%c", c);
+                index--;
+            }
             continue;
         }
         if (c <= 0) {
