@@ -4,7 +4,7 @@
 #include "hardware/gpio.h"
 #include "pico/binary_info.h"
 #include "relay.h"
-#include "ws2812.pio.h"
+// #include "ws2812.pio.h"
 
 const uint LED_PIN = 25;
 const uint PIN_LOOKUP[] = {
@@ -16,16 +16,16 @@ char line_buffer[MAX_LINE_LENGTH + 1];
 char word_buffer[MAX_LINE_LENGTH + 1];
 char * word_list[MAX_WORDS];
 
-static inline void put_pixel(uint32_t pixel_grb) {
-    pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
-}
+// static inline void put_pixel(uint32_t pixel_grb) {
+//     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
+// }
 
-static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
-    return
-            ((uint32_t) (r) << 8) |
-            ((uint32_t) (g) << 16) |
-            (uint32_t) (b);
-}
+// static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
+//     return
+//             ((uint32_t) (r) << 8) |
+//             ((uint32_t) (g) << 16) |
+//             (uint32_t) (b);
+// }
 
 int hex2int(char *s) {
     int x;
