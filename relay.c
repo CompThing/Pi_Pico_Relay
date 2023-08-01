@@ -93,7 +93,8 @@ char* HELP =
     "Commands:\n"
     "help\n"
     "relay set <relay num>\n"
-    "relay clear\n";
+    "relay clear <relay num>\n"
+    "relay value <relay bit value> mask <bitmask of relays to change>";
 
 void commandHelp() {
     printf("%s", HELP);
