@@ -6,6 +6,7 @@
 #include "relay.h"
 // #include "ws2812.pio.h"
 
+const char * VERSION = "0.0.1";
 const uint LED_PIN = 25;
 const uint PIN_LOOKUP[] = {
     JDQ1, JDQ2, JDQ3, JDQ4, JDQ5, JDQ6, JDQ7, JDQ8
@@ -85,19 +86,26 @@ void relayValueMask(uint relay_value, uint relay_mask) {
 
 char * COMMAND_TABLE[] = {
     "help",
+    "version",
     "relay"
 };
+
 int COMMAND_TABLE_LEN = sizeof(COMMAND_TABLE) / sizeof(COMMAND_TABLE[0]);
 
 char* HELP =
     "Commands:\n"
     "help\n"
+    "version\n"
     "relay set <relay num>\n"
     "relay clear <relay num>\n"
     "relay value <relay bit value> mask <bitmask of relays to change>";
 
 void commandHelp() {
-    printf("%s", HELP);
+    printf("%s\n", HELP);
+}
+
+void commandVersion() {
+    printf("%s\n", VERSION);
 }
 
 char * RELAY_COMMAND_TABLE[] = {
@@ -191,6 +199,10 @@ void commandsAll(int word_count, char* word_list[]) {
                 break;
             
             case 1:
+                commandVersion();
+                break;
+            
+            case 2:
                 command_result = commandRelays(sub_count, sub_commands);
                 break;
             
