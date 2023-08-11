@@ -51,6 +51,14 @@ bool isEqual(const char *cmd, const char *buffer)
     return strcmp(buffer, cmd) == 0;
 }
 
+void relaysInit() {
+    for (int pin_num = 0; pin_num < 8; pin_num++) {
+        int physical_pin = PIN_LOOKUP[pin_num % 8];
+        gpio_init(physical_pin);
+        gpio_set_dir(physical_pin, GPIO_OUT);
+    }
+}
+
 void relaySetOrClear(int pin_num, bool set_value) {
     int pin_value;
     if (set_value) {
@@ -296,6 +304,7 @@ int main() {
 
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
+    relaysInit();
 
     struct repeating_timer timer;
     add_repeating_timer_ms(500, blink_callback, NULL, &timer);
