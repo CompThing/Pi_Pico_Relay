@@ -2,6 +2,7 @@
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
 name: CMake on a single platform
 
+
 on:
   push:
     branches: [ "main" ]
@@ -20,6 +21,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: arm-none-eabi-gcc GNU Arm Embedded Toolchain
+      uses: carlosperate/arm-none-eabi-gcc-action@v1.7.1
+
     - uses: actions/checkout@v3
 
     - name: Configure CMake
