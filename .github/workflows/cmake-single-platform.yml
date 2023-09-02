@@ -45,6 +45,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: pico-image
-        path: |
-          build/relay.uf2
+        path: build/relay.uf2
 
