@@ -6,7 +6,7 @@
 #include "relay.h"
 // #include "ws2812.pio.h"
 
-const char * VERSION = "0.0.1";
+const char * VERSION = "0.0.2";
 const uint LED_PIN = 25;
 const uint PIN_LOOKUP[] = {
     JDQ1, JDQ2, JDQ3, JDQ4, JDQ5, JDQ6, JDQ7, JDQ8
@@ -104,9 +104,16 @@ char* HELP =
     "Commands:\n"
     "help\n"
     "version\n"
+    "    Output program version\n"
     "relay set <relay num>\n"
+    "    Set a single relay numbered from 1 to 8\n"
     "relay clear <relay num>\n"
-    "relay value <relay bit value> mask <bitmask of relays to change>";
+    "    Clear a single relay numbered from 1 to 8\n"
+    "relay value <relay bit value> mask <bitmask of relays to change>\n"
+    "relay value <relay bit value> <bitmask of relays to change>\n"
+    "    Set or clear multiple relays via 8 bit hex value and mask\n"
+    "relay state?\n"
+    "    Show configured state of all relays\n";
 
 void commandHelp() {
     printf("%s\n", HELP);
@@ -161,14 +168,18 @@ bool commandRelays(int word_count, char* word_list[]) {
                 return true;
 
             case 2:
-                if (sub_count < 3) {
+                if (sub_count < 2) {
                     return false;
+                }
+                int mask_offset = 0;
+                if (sub_count > 2) {
+                    mask_offset = 1;
                 }
                 if (isEqual(sub_commands[1], "mask")) {
                     int relay_value = hex2int(sub_commands[0]);
-                    int relay_mask = hex2int(sub_commands[2]);
+                    int relay_mask = hex2int(sub_commands[1 + mask_offset]);
                     relayValueMask(relay_value, relay_mask);
-                    printf("RESULT relay value mask %x %x\n", relay_value, relay_mask);
+                    printf("RESULT relay value %x mask %x\n", relay_value, relay_mask);
                     return true;
                 }
                 else {
@@ -285,7 +296,7 @@ int readLine(char *buffer, int length)
         }
         buffer[index++] = (char) c;
         printf("%c", c);
-        if (c == '\n') {
+        if (c == '\n' || c == '\r'){
             break;
         }
 
